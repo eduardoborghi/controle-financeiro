@@ -6,6 +6,7 @@
     <title>Meu Dashboard Financeiro</title>
     <!-- Tailwind CSS para Estilização rápida -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
     <!-- Chart.js para Gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome para Ícones -->
@@ -13,41 +14,80 @@
     
     <style>
         /* Customizações da Barra de Rolagem */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Scrollbar modo escuro */
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
+        .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        /* Evita zoom automático em inputs no iOS */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            input, select { font-size: 16px; }
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans h-screen overflow-hidden">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans h-screen overflow-hidden">
 
     <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="flex items-center justify-center h-screen bg-gradient-to-r from-blue-500 to-indigo-600">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-96 text-center">
-            <h1 class="text-2xl font-bold mb-6 text-gray-700"><i class="fa-solid fa-wallet text-blue-500"></i> FinançasApp</h1>
-            
-            <input type="password" id="password-input" placeholder="Digite sua senha" onkeypress="if(event.key === 'Enter') login()" class="w-full p-3 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            
-            <button onclick="login()" class="w-full bg-blue-500 text-white font-bold py-3 rounded hover:bg-blue-600 transition">Entrar</button>
-            <p id="login-error" class="text-red-500 text-sm mt-3 hidden">Senha incorreta!</p>
+    <div id="login-screen" class="flex items-center justify-center h-screen bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-gray-800 dark:to-gray-900 p-4">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm text-center">
+            <h1 class="text-2xl font-bold mb-6 text-gray-700 dark:text-white"><i class="fa-solid fa-wallet text-blue-500"></i> FinançasApp</h1>
+
+            <!-- Painel de Login -->
+            <div id="painel-login">
+                <select id="select-conta" class="w-full p-3 border dark:border-gray-600 rounded mb-3 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Selecione uma conta...</option>
+                </select>
+                <input type="password" id="password-input" placeholder="Digite sua senha" onkeypress="if(event.key === 'Enter') login()" class="w-full p-3 border dark:border-gray-600 rounded mb-4 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="login()" class="w-full bg-blue-500 text-white font-bold py-3 rounded hover:bg-blue-600 transition">Entrar</button>
+                <p id="login-error" class="text-red-500 text-sm mt-3 hidden">Senha incorreta!</p>
+                <button onclick="mostrarCriarConta()" class="mt-4 text-blue-500 dark:text-blue-400 text-sm hover:underline">
+                    <i class="fa-solid fa-user-plus mr-1"></i> Criar nova conta
+                </button>
+            </div>
+
+            <!-- Painel de Criar Conta -->
+            <div id="painel-criar-conta" class="hidden">
+                <h2 class="text-lg font-bold mb-4 text-gray-700 dark:text-white">Nova Conta</h2>
+                <input type="text" id="novo-usuario" placeholder="Nome de usuário" class="w-full p-3 border dark:border-gray-600 rounded mb-3 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="nova-senha-cadastro" placeholder="Senha (mín. 3 caracteres)" class="w-full p-3 border dark:border-gray-600 rounded mb-3 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p id="cadastro-error" class="text-red-500 text-sm mb-2 hidden"></p>
+                <button onclick="criarConta()" class="w-full bg-green-500 text-white font-bold py-3 rounded hover:bg-green-600 transition mb-3">Criar Conta</button>
+                <button onclick="voltarLogin()" class="text-gray-500 dark:text-gray-400 text-sm hover:underline">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Voltar
+                </button>
+            </div>
+
+            <div class="mt-5 border-t dark:border-gray-700 pt-4">
+                <button onclick="toggleDarkMode()" class="text-gray-400 dark:text-gray-300 text-sm hover:text-gray-600 dark:hover:text-white transition">
+                    <i class="fa-solid fa-circle-half-stroke mr-1"></i> Alternar Modo Escuro
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- TELA DO DASHBOARD -->
-    <div id="dashboard-screen" class="hidden flex h-screen w-full">
+    <div id="dashboard-screen" class="hidden flex flex-col md:flex-row h-screen w-full">
+
+        <!-- Header mobile (só aparece em telas pequenas) -->
+        <header class="md:hidden bg-slate-800 dark:bg-gray-950 text-white flex items-center justify-between px-4 py-3 flex-shrink-0">
+            <button onclick="toggleMenu()" class="text-white text-xl"><i class="fa-solid fa-bars"></i></button>
+            <span class="font-bold"><i class="fa-solid fa-wallet text-blue-400 mr-1"></i> Finanças</span>
+            <button onclick="logout()" class="text-red-400"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </header>
+
+        <!-- Overlay para fechar menu mobile -->
+        <div id="menu-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" onclick="toggleMenu()"></div>
+
         <!-- Menu Lateral -->
-        <aside class="w-64 bg-slate-800 text-white flex flex-col transition-all duration-300">
-            <div class="p-6 text-2xl font-bold flex items-center gap-2 border-b border-slate-700">
+        <aside id="sidebar" class="fixed md:relative z-30 md:z-auto h-full w-64 bg-slate-800 dark:bg-gray-950 text-white flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0">
+            <div class="p-6 text-2xl font-bold flex items-center gap-2 border-b border-slate-700 dark:border-gray-800">
                 <i class="fa-solid fa-wallet text-blue-400"></i> Finanças
+            </div>
+            <div class="px-4 py-2 border-b border-slate-700 dark:border-gray-800">
+                <p class="text-slate-400 text-xs">Conta: <span id="nome-usuario-sidebar" class="text-white font-semibold"></span></p>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <button onclick="showTab('resumo')" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left"><i class="fa-solid fa-chart-pie"></i> Resumo</button>
@@ -55,42 +95,43 @@
                 <button onclick="showTab('cartoes')" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left"><i class="fa-solid fa-credit-card"></i> Cartões</button>
                 <button onclick="showTab('configuracoes')" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left"><i class="fa-solid fa-gear"></i> Configurações</button>
             </nav>
-            <div class="p-4 border-t border-slate-700">
+            <div class="p-4 border-t border-slate-700 dark:border-gray-800 space-y-1">
+                <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left text-slate-300"><i class="fa-solid fa-circle-half-stroke"></i> Modo Escuro</button>
                 <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded hover:bg-red-600 transition text-left text-red-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
             </div>
         </aside>
 
         <!-- Conteúdo Principal -->
-        <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
+        <main class="flex-1 overflow-y-auto p-8 bg-gray-50 dark:bg-gray-900">
             
             <!-- ABA: RESUMO -->
             <div id="tab-resumo" class="tab-content">
-                <h2 class="text-3xl font-bold mb-6">Dashboard Geral</h2>
+                <h2 class="text-3xl font-bold mb-6 dark:text-white">Dashboard Geral</h2>
                 
                 <!-- Cards de Totais -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-                        <h3 class="text-gray-500 text-sm">Receitas</h3>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border-l-4 border-green-500">
+                        <h3 class="text-gray-500 dark:text-gray-400 text-sm">Receitas</h3>
                         <p class="text-2xl font-bold text-green-600" id="total-receitas">R$ 0,00</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
-                        <h3 class="text-gray-500 text-sm">Despesas</h3>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border-l-4 border-red-500">
+                        <h3 class="text-gray-500 dark:text-gray-400 text-sm">Despesas</h3>
                         <p class="text-2xl font-bold text-red-600" id="total-despesas">R$ 0,00</p>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
-                        <h3 class="text-gray-500 text-sm">Saldo Atual</h3>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border-l-4 border-blue-500">
+                        <h3 class="text-gray-500 dark:text-gray-400 text-sm">Saldo Atual</h3>
                         <p class="text-2xl font-bold text-blue-600" id="saldo-atual">R$ 0,00</p>
                     </div>
                 </div>
 
                 <!-- Gráficos -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="font-bold mb-4 text-center">Gastos por Categoria</h3>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="font-bold mb-4 text-center dark:text-white">Gastos por Categoria</h3>
                         <canvas id="chartCategorias"></canvas>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="font-bold mb-4 text-center">Gastos por Forma de Pagamento</h3>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="font-bold mb-4 text-center dark:text-white">Gastos por Forma de Pagamento</h3>
                         <canvas id="chartPagamentos"></canvas>
                     </div>
                 </div>
@@ -98,19 +139,19 @@
 
             <!-- ABA: TRANSAÇÕES -->
             <div id="tab-transacoes" class="tab-content hidden">
-                <h2 class="text-3xl font-bold mb-6">Transações</h2>
+                <h2 class="text-3xl font-bold mb-6 dark:text-white">Transações</h2>
                 
-                <div class="bg-white p-6 rounded-lg shadow mb-8">
-                    <h3 class="font-bold mb-4">Adicionar Nova Transação</h3>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8">
+                    <h3 class="font-bold mb-4 dark:text-white">Adicionar Nova Transação</h3>
                     <form id="form-transacao" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="text" id="t-descricao" placeholder="Descrição da compra/receita" required class="p-2 border rounded">
-                        <select id="t-tipo" class="p-2 border rounded">
+                        <input type="text" id="t-descricao" placeholder="Descrição da compra/receita" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="t-tipo" class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="despesa">Despesa</option>
                             <option value="receita">Receita</option>
                         </select>
-                        <input type="number" id="t-valor" placeholder="Valor (R$)" step="0.01" required class="p-2 border rounded">
-                        <input type="number" id="t-qtd" placeholder="Quantidade" value="1" min="1" required class="p-2 border rounded">
-                        <select id="t-categoria" required class="p-2 border rounded">
+                        <input type="number" id="t-valor" placeholder="Valor (R$)" step="0.01" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="number" id="t-qtd" placeholder="Quantidade" value="1" min="1" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="t-categoria" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="" disabled selected>Categoria</option>
                             <option value="Alimentação">Alimentação</option>
                             <option value="Transporte">Transporte</option>
@@ -119,29 +160,29 @@
                             <option value="Salário">Salário</option>
                             <option value="Outros">Outros</option>
                         </select>
-                        <select id="t-pagamento" required class="p-2 border rounded">
+                        <select id="t-pagamento" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="" disabled selected>Forma de Pagto.</option>
                             <option value="Pix">Pix</option>
                             <option value="Dinheiro">Dinheiro</option>
                             <option value="Cartão de Crédito">Cartão de Crédito</option>
                             <option value="Cartão de Débito">Cartão de Débito</option>
                         </select>
-                        <input type="date" id="t-data" required class="p-2 border rounded">
+                        <input type="date" id="t-data" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <button type="submit" class="bg-green-500 text-white font-bold p-2 rounded hover:bg-green-600 md:col-span-2">Adicionar</button>
                     </form>
                 </div>
 
-                <div class="bg-white rounded-lg shadow overflow-x-auto">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-100 border-b">
-                                <th class="p-3">Data</th>
-                                <th class="p-3">Descrição</th>
-                                <th class="p-3">Categoria</th>
-                                <th class="p-3">Pagamento</th>
-                                <th class="p-3">Qtd</th>
-                                <th class="p-3">Valor Total</th>
-                                <th class="p-3">Ação</th>
+                            <tr class="bg-gray-100 dark:bg-gray-700 border-b dark:border-gray-600">
+                                <th class="p-3 dark:text-gray-300">Data</th>
+                                <th class="p-3 dark:text-gray-300">Descrição</th>
+                                <th class="p-3 dark:text-gray-300">Categoria</th>
+                                <th class="p-3 dark:text-gray-300">Pagamento</th>
+                                <th class="p-3 dark:text-gray-300">Qtd</th>
+                                <th class="p-3 dark:text-gray-300">Valor Total</th>
+                                <th class="p-3 dark:text-gray-300">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-transacoes">
@@ -153,14 +194,14 @@
 
             <!-- ABA: CARTÕES -->
             <div id="tab-cartoes" class="tab-content hidden">
-                <h2 class="text-3xl font-bold mb-6">Meus Cartões</h2>
+                <h2 class="text-3xl font-bold mb-6 dark:text-white">Meus Cartões</h2>
                 
-                <div class="bg-white p-6 rounded-lg shadow mb-8">
-                    <h3 class="font-bold mb-4">Adicionar Cartão</h3>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8">
+                    <h3 class="font-bold mb-4 dark:text-white">Adicionar Cartão</h3>
                     <form id="form-cartao" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="text" id="c-nome" placeholder="Apelido do Cartão" required class="p-2 border rounded">
-                        <input type="text" id="c-banco" placeholder="Banco (ex: Nubank)" required class="p-2 border rounded">
-                        <input type="number" id="c-vencimento" placeholder="Dia do Vencimento" min="1" max="31" required class="p-2 border rounded">
+                        <input type="text" id="c-nome" placeholder="Apelido do Cartão" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="c-banco" placeholder="Banco (ex: Nubank)" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="number" id="c-vencimento" placeholder="Dia do Vencimento" min="1" max="31" required class="p-2 border dark:border-gray-600 rounded bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <button type="submit" class="bg-blue-500 text-white font-bold p-2 rounded hover:bg-blue-600">Salvar Cartão</button>
                     </form>
                 </div>
@@ -172,17 +213,17 @@
 
             <!-- ABA: CONFIGURAÇÕES -->
             <div id="tab-configuracoes" class="tab-content hidden">
-                <h2 class="text-3xl font-bold mb-6">Configurações</h2>
+                <h2 class="text-3xl font-bold mb-6 dark:text-white">Configurações</h2>
                 
-                <div class="bg-white p-6 rounded-lg shadow max-w-lg mb-6">
-                    <h3 class="font-bold mb-4 text-lg">Alterar Senha</h3>
-                    <input type="password" id="nova-senha" placeholder="Nova Senha" class="w-full p-2 border rounded mb-3">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow max-w-lg mb-6">
+                    <h3 class="font-bold mb-4 text-lg dark:text-white">Alterar Senha</h3>
+                    <input type="password" id="nova-senha" placeholder="Nova Senha" class="w-full p-2 border dark:border-gray-600 rounded mb-3 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <button onclick="mudarSenha()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 w-full">Atualizar Senha</button>
                 </div>
 
-                <div class="bg-white p-6 rounded-lg shadow max-w-lg">
-                    <h3 class="font-bold mb-4 text-lg">Backup de Dados</h3>
-                    <p class="text-sm text-gray-600 mb-4">Como o site não tem banco de dados em nuvem, salve seus dados ou importe de outro dispositivo aqui.</p>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow max-w-lg">
+                    <h3 class="font-bold mb-4 text-lg dark:text-white">Backup de Dados</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Como o site não tem banco de dados em nuvem, salve seus dados ou importe de outro dispositivo aqui.</p>
                     <div class="flex gap-4">
                         <button onclick="exportarDados()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"><i class="fa-solid fa-download"></i> Baixar Dados</button>
                         <button onclick="document.getElementById('file-import').click()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"><i class="fa-solid fa-upload"></i> Importar Dados</button>
@@ -198,39 +239,147 @@
     <!-- SCRIPT TUDO-EM-UM -->
     <script>
         // ================= ESTADO DA APLICAÇÃO =================
-        let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-        let cartoes = JSON.parse(localStorage.getItem('cartoes')) ||[];
-        let senhaApp = localStorage.getItem('senha_app') || 'eduardoborghi';
+        // Multi-conta: { nomeUsuario: { senha, transacoes, cartoes }, ... }
+        let contaAtual = null;
+        let transacoes = [];
+        let cartoes = [];
         let graficoCategorias, graficoPagamentos;
+
+        function getTodasContas() {
+            return JSON.parse(localStorage.getItem('financas_contas')) || {};
+        }
+        function salvarTodasContas(c) {
+            localStorage.setItem('financas_contas', JSON.stringify(c));
+        }
+
+        // Migração automática de conta única antiga para multi-conta
+        (function() {
+            const senhaAntiga = localStorage.getItem('senha_app');
+            const contas = getTodasContas();
+            if (senhaAntiga && !contas['admin']) {
+                contas['admin'] = {
+                    senha: senhaAntiga,
+                    transacoes: JSON.parse(localStorage.getItem('transacoes')) || [],
+                    cartoes: JSON.parse(localStorage.getItem('cartoes')) || []
+                };
+                salvarTodasContas(contas);
+                localStorage.removeItem('senha_app');
+                localStorage.removeItem('transacoes');
+                localStorage.removeItem('cartoes');
+            }
+        })();
+
+        // Aplica modo escuro salvo
+        if (localStorage.getItem('financas_darkmode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Popula select de contas no login
+        function renderizarSelectContas() {
+            const select = document.getElementById('select-conta');
+            const contas = getTodasContas();
+            select.innerHTML = '<option value="">Selecione uma conta...</option>';
+            Object.keys(contas).forEach(nome => {
+                select.innerHTML += `<option value="${nome}">${nome}</option>`;
+            });
+        }
+        renderizarSelectContas();
 
         // Configura a data padrão para hoje no formulário
         document.getElementById('t-data').valueAsDate = new Date();
 
-        // ================= SISTEMA DE LOGIN =================
-        function login() {
-            const input = document.getElementById('password-input').value;
-            // Verifica a senha digitada
-            if (input === senhaApp) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard-screen').classList.remove('hidden');
-                document.getElementById('login-error').classList.add('hidden');
-                atualizarDashboard();
+        // ================= MODO ESCURO =================
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('financas_darkmode', isDark);
+        }
+
+        // ================= MENU MOBILE =================
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menu-overlay');
+            const aberto = !sidebar.classList.contains('-translate-x-full');
+            if (aberto) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
             } else {
-                document.getElementById('login-error').classList.remove('hidden');
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
             }
         }
 
+        // ================= SISTEMA DE LOGIN =================
+        function mostrarCriarConta() {
+            document.getElementById('painel-login').classList.add('hidden');
+            document.getElementById('painel-criar-conta').classList.remove('hidden');
+        }
+
+        function voltarLogin() {
+            document.getElementById('painel-criar-conta').classList.add('hidden');
+            document.getElementById('painel-login').classList.remove('hidden');
+        }
+
+        function criarConta() {
+            const usuario = document.getElementById('novo-usuario').value.trim();
+            const senha = document.getElementById('nova-senha-cadastro').value;
+            const erro = document.getElementById('cadastro-error');
+            if (usuario.length < 2) { erro.textContent = 'Nome deve ter no mínimo 2 caracteres.'; erro.classList.remove('hidden'); return; }
+            if (senha.length < 3) { erro.textContent = 'A senha deve ter no mínimo 3 caracteres.'; erro.classList.remove('hidden'); return; }
+            const contas = getTodasContas();
+            if (contas[usuario]) { erro.textContent = 'Esse nome de usuário já existe.'; erro.classList.remove('hidden'); return; }
+            contas[usuario] = { senha: senha, transacoes: [], cartoes: [] };
+            salvarTodasContas(contas);
+            renderizarSelectContas();
+            document.getElementById('select-conta').value = usuario;
+            document.getElementById('novo-usuario').value = '';
+            document.getElementById('nova-senha-cadastro').value = '';
+            erro.classList.add('hidden');
+            voltarLogin();
+            alert(`Conta "${usuario}" criada! Faça login.`);
+        }
+
+        function login() {
+            const usuario = document.getElementById('select-conta').value;
+            const senha = document.getElementById('password-input').value;
+            const erro = document.getElementById('login-error');
+            if (!usuario) { erro.textContent = 'Selecione uma conta!'; erro.classList.remove('hidden'); return; }
+            const contas = getTodasContas();
+            if (!contas[usuario] || senha !== contas[usuario].senha) {
+                erro.textContent = 'Senha incorreta!';
+                erro.classList.remove('hidden');
+                return;
+            }
+            erro.classList.add('hidden');
+            contaAtual = usuario;
+            transacoes = contas[usuario].transacoes || [];
+            cartoes = contas[usuario].cartoes || [];
+            document.getElementById('nome-usuario-sidebar').textContent = contaAtual;
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            document.getElementById('password-input').value = '';
+            document.getElementById('t-data').valueAsDate = new Date();
+            atualizarDashboard();
+        }
+
         function logout() {
+            contaAtual = null;
+            transacoes = [];
+            cartoes = [];
             document.getElementById('dashboard-screen').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('password-input').value = '';
+            renderizarSelectContas();
+            // Fecha menu mobile se estiver aberto
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('menu-overlay').classList.add('hidden');
         }
 
         function mudarSenha() {
             const nova = document.getElementById('nova-senha').value;
             if(nova.length < 3) return alert('A senha deve ter no mínimo 3 caracteres.');
-            senhaApp = nova;
-            localStorage.setItem('senha_app', senhaApp);
+            const contas = getTodasContas();
+            contas[contaAtual].senha = nova;
+            salvarTodasContas(contas);
             alert('Senha atualizada com sucesso!');
             document.getElementById('nova-senha').value = '';
         }
@@ -240,6 +389,9 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             if(tabId === 'resumo') atualizarDashboard();
+            // Fecha menu mobile ao trocar de aba
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('menu-overlay').classList.add('hidden');
         }
 
         // ================= TRANSAÇÕES =================
@@ -270,7 +422,7 @@
             tbody.innerHTML = '';
             
             // Ordenar da mais recente para a mais antiga
-            const transacoesOrdenadas =[...transacoes].sort((a,b) => new Date(b.data) - new Date(a.data));
+            const transacoesOrdenadas = [...transacoes].sort((a,b) => new Date(b.data) - new Date(a.data));
 
             transacoesOrdenadas.forEach(t => {
                 const total = t.valor * t.qtd;
@@ -278,12 +430,12 @@
                 const sinal = t.tipo === 'receita' ? '+' : '-';
 
                 tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-3">${t.data.split('-').reverse().join('/')}</td>
-                        <td class="p-3 font-medium">${t.descricao}</td>
-                        <td class="p-3"><span class="bg-gray-200 text-xs px-2 py-1 rounded">${t.categoria}</span></td>
-                        <td class="p-3">${t.pagamento}</td>
-                        <td class="p-3">${t.qtd}</td>
+                    <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="p-3 dark:text-gray-300">${t.data.split('-').reverse().join('/')}</td>
+                        <td class="p-3 font-medium dark:text-white">${t.descricao}</td>
+                        <td class="p-3"><span class="bg-gray-200 dark:bg-gray-600 dark:text-gray-200 text-xs px-2 py-1 rounded">${t.categoria}</span></td>
+                        <td class="p-3 dark:text-gray-300">${t.pagamento}</td>
+                        <td class="p-3 dark:text-gray-300">${t.qtd}</td>
                         <td class="p-3 font-bold ${corValor}">${sinal} R$ ${total.toFixed(2)}</td>
                         <td class="p-3">
                             <button onclick="deletarTransacao(${t.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
@@ -410,13 +562,16 @@
 
         // ================= UTILIDADES =================
         function salvarDados() {
-            localStorage.setItem('transacoes', JSON.stringify(transacoes));
-            localStorage.setItem('cartoes', JSON.stringify(cartoes));
+            if (!contaAtual) return;
+            const contas = getTodasContas();
+            contas[contaAtual].transacoes = transacoes;
+            contas[contaAtual].cartoes = cartoes;
+            salvarTodasContas(contas);
         }
 
         // Backup de dados (Exportar)
         function exportarDados() {
-            const dados = { transacoes, cartoes, senhaApp };
+            const dados = { transacoes, cartoes };
             const blob = new Blob([JSON.stringify(dados)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -435,10 +590,6 @@
                     const dados = JSON.parse(e.target.result);
                     transacoes = dados.transacoes ||[];
                     cartoes = dados.cartoes ||[];
-                    if(dados.senhaApp) {
-                        senhaApp = dados.senhaApp;
-                        localStorage.setItem('senha_app', senhaApp);
-                    }
                     salvarDados();
                     alert('Dados importados com sucesso!');
                     atualizarDashboard();
@@ -452,5 +603,12 @@
         function limparTudo() {
             if(confirm('ATENÇÃO: Isso apagará todas as suas transações e cartões. Tem certeza?')) {
                 transacoes = [];
-                cartoes = 
-[]; salvarDados(); atualizarDashboard(); alert('Tudo apagado!'); } } </script> </body> </html>
+                cartoes = [];
+                salvarDados();
+                atualizarDashboard();
+                alert('Tudo apagado!');
+            }
+        }
+    </script>
+</body>
+</html>
