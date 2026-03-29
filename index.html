@@ -1,205 +1,182 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finanças Pro - Dashboard</title>
+    <title>Meu Dashboard Financeiro</title>
+    <!-- Tailwind CSS para Estilização rápida -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para Gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .hidden { display: none; }
-    </style>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 text-gray-800 font-sans h-screen overflow-hidden">
 
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-blue-600">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-96">
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Acesso Restrito</h2>
-            <input type="password" id="password-input" placeholder="Digite a senha" class="w-full p-2 border rounded mb-4 outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Entrar</button>
-            <p id="login-error" class="text-red-500 text-sm mt-2 hidden">Senha incorreta!</p>
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="flex items-center justify-center h-screen bg-gradient-to-r from-blue-500 to-indigo-600">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-96 text-center">
+            <h1 class="text-2xl font-bold mb-6 text-gray-700"><i class="fa-solid fa-wallet text-blue-500"></i> FinançasApp</h1>
+            <input type="password" id="password-input" placeholder="Digite sua senha" class="w-full p-3 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="login()" class="w-full bg-blue-500 text-white font-bold py-3 rounded hover:bg-blue-600 transition">Entrar</button>
+            <p id="login-error" class="text-red-500 text-sm mt-3 hidden">Senha incorreta!</p>
         </div>
     </div>
 
-    <div id="dashboard" class="hidden">
-        <nav class="bg-white shadow-md p-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-blue-600">Eduardo Finance</h1>
-            <div class="space-x-4">
-                <button onclick="showSection('config')" class="text-gray-600 hover:text-blue-600">Configurações</button>
-                <button onclick="logout()" class="text-red-500">Sair</button>
+    <!-- TELA DO DASHBOARD -->
+    <div id="dashboard-screen" class="hidden flex h-screen w-full">
+        <!-- Menu Lateral -->
+        <aside class="w-64 bg-slate-800 text-white flex flex-col transition-all duration-300">
+            <div class="p-6 text-2xl font-bold flex items-center gap-2 border-b border-slate-700">
+                <i class="fa-solid fa-wallet text-blue-400"></i> Finanças
             </div>
-        </nav>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="showTab('resumo')" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left"><i class="fa-solid fa-chart-pie"></i> Resumo</button>
+                <button onclick="showTab('transacoes')" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left"><i class="fa-solid fa-money-bill-transfer"></i> Transações</button>
+                <button onclick="showTab('cartoes')" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left"><i class="fa-solid fa-credit-card"></i> Cartões</button>
+                <button onclick="showTab('configuracoes')" class="w-full flex items-center gap-3 p-3 rounded hover:bg-slate-700 transition text-left"><i class="fa-solid fa-gear"></i> Configurações</button>
+            </nav>
+            <div class="p-4 border-t border-slate-700">
+                <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded hover:bg-red-600 transition text-left text-red-400 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+            </div>
+        </aside>
 
-        <div class="p-6 max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-                    <p class="text-gray-500 text-sm">Total Gasto</p>
-                    <h3 id="total-gasto" class="text-2xl font-bold">R$ 0,00</h3>
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
+            
+            <!-- ABA: RESUMO -->
+            <div id="tab-resumo" class="tab-content">
+                <h2 class="text-3xl font-bold mb-6">Dashboard Geral</h2>
+                
+                <!-- Cards de Totais -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                        <h3 class="text-gray-500 text-sm">Receitas</h3>
+                        <p class="text-2xl font-bold text-green-600" id="total-receitas">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
+                        <h3 class="text-gray-500 text-sm">Despesas</h3>
+                        <p class="text-2xl font-bold text-red-600" id="total-despesas">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                        <h3 class="text-gray-500 text-sm">Saldo Atual</h3>
+                        <p class="text-2xl font-bold text-blue-600" id="saldo-atual">R$ 0,00</p>
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
-                    <p class="text-gray-500 text-sm">Compras Realizadas</p>
-                    <h3 id="total-compras" class="text-2xl font-bold">0</h3>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
-                    <p class="text-gray-500 text-sm">Cartão Principal</p>
-                    <h3 id="card-destaque" class="text-2xl font-bold">Nenhum</h3>
+
+                <!-- Gráficos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="font-bold mb-4 text-center">Gastos por Categoria</h3>
+                        <canvas id="chartCategorias"></canvas>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="font-bold mb-4 text-center">Gastos por Forma de Pagamento</h3>
+                        <canvas id="chartPagamentos"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-lg font-bold mb-4">Nova Transação</h2>
-                    <form id="finance-form" class="space-y-4">
-                        <input type="text" id="desc" placeholder="O que você comprou?" class="w-full p-2 border rounded" required>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="val" placeholder="Valor (R$)" class="p-2 border rounded" required>
-                            <input type="number" id="qtd" placeholder="Qtd" value="1" class="p-2 border rounded" required>
-                        </div>
-                        <select id="cat" class="w-full p-2 border rounded">
+            <!-- ABA: TRANSAÇÕES -->
+            <div id="tab-transacoes" class="tab-content hidden">
+                <h2 class="text-3xl font-bold mb-6">Transações</h2>
+                
+                <div class="bg-white p-6 rounded-lg shadow mb-8">
+                    <h3 class="font-bold mb-4">Adicionar Nova Transação</h3>
+                    <form id="form-transacao" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="t-descricao" placeholder="Descrição da compra/receita" required class="p-2 border rounded">
+                        <select id="t-tipo" class="p-2 border rounded">
+                            <option value="despesa">Despesa</option>
+                            <option value="receita">Receita</option>
+                        </select>
+                        <input type="number" id="t-valor" placeholder="Valor (R$)" step="0.01" required class="p-2 border rounded">
+                        <input type="number" id="t-qtd" placeholder="Quantidade" value="1" min="1" required class="p-2 border rounded">
+                        <select id="t-categoria" required class="p-2 border rounded">
+                            <option value="" disabled selected>Categoria</option>
                             <option value="Alimentação">Alimentação</option>
                             <option value="Transporte">Transporte</option>
                             <option value="Lazer">Lazer</option>
-                            <option value="Saúde">Saúde</option>
+                            <option value="Contas">Contas Fixas</option>
+                            <option value="Salário">Salário</option>
                             <option value="Outros">Outros</option>
                         </select>
-                        <select id="pag" class="w-full p-2 border rounded">
-                            <option value="Dinheiro">Dinheiro</option>
+                        <select id="t-pagamento" required class="p-2 border rounded">
+                            <option value="" disabled selected>Forma de Pagto.</option>
                             <option value="Pix">Pix</option>
-                            <option id="card-option" value="Cartão">Cartão de Crédito</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="Cartão de Débito">Cartão de Débito</option>
                         </select>
-                        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">Adicionar</button>
+                        <input type="date" id="t-data" required class="p-2 border rounded">
+                        <button type="submit" class="bg-green-500 text-white font-bold p-2 rounded hover:bg-green-600 md:col-span-2">Adicionar</button>
                     </form>
                 </div>
 
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-lg font-bold mb-4">Gastos por Categoria</h2>
-                    <canvas id="categoryChart"></canvas>
+                <div class="bg-white rounded-lg shadow overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-3">Data</th>
+                                <th class="p-3">Descrição</th>
+                                <th class="p-3">Categoria</th>
+                                <th class="p-3">Pagamento</th>
+                                <th class="p-3">Qtd</th>
+                                <th class="p-3">Valor Total</th>
+                                <th class="p-3">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-transacoes">
+                            <!-- Injetado via JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="mt-8 bg-white p-6 rounded-lg shadow">
-                <h2 class="text-lg font-bold mb-4">Meus Cartões & Bancos</h2>
-                <div class="flex gap-4 mb-4">
-                    <input type="text" id="bank-name" placeholder="Banco" class="p-2 border rounded">
-                    <input type="number" id="card-expiry" placeholder="Dia de Vencimento" class="p-2 border rounded w-32">
-                    <button onclick="addCard()" class="bg-blue-500 text-white px-4 py-2 rounded">Salvar Cartão</button>
+            <!-- ABA: CARTÕES -->
+            <div id="tab-cartoes" class="tab-content hidden">
+                <h2 class="text-3xl font-bold mb-6">Meus Cartões</h2>
+                
+                <div class="bg-white p-6 rounded-lg shadow mb-8">
+                    <h3 class="font-bold mb-4">Adicionar Cartão</h3>
+                    <form id="form-cartao" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="text" id="c-nome" placeholder="Apelido do Cartão" required class="p-2 border rounded">
+                        <input type="text" id="c-banco" placeholder="Banco (ex: Nubank)" required class="p-2 border rounded">
+                        <input type="number" id="c-vencimento" placeholder="Dia do Vencimento" min="1" max="31" required class="p-2 border rounded">
+                        <button type="submit" class="bg-blue-500 text-white font-bold p-2 rounded hover:bg-blue-600">Salvar Cartão</button>
+                    </form>
                 </div>
-                <ul id="card-list" class="list-disc pl-5 text-gray-700"></ul>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="lista-cartoes">
+                    <!-- Injetado via JS -->
+                </div>
             </div>
-        </div>
+
+            <!-- ABA: CONFIGURAÇÕES -->
+            <div id="tab-configuracoes" class="tab-content hidden">
+                <h2 class="text-3xl font-bold mb-6">Configurações</h2>
+                
+                <div class="bg-white p-6 rounded-lg shadow max-w-lg mb-6">
+                    <h3 class="font-bold mb-4 text-lg">Alterar Senha</h3>
+                    <input type="password" id="nova-senha" placeholder="Nova Senha" class="w-full p-2 border rounded mb-3">
+                    <button onclick="mudarSenha()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 w-full">Atualizar Senha</button>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow max-w-lg">
+                    <h3 class="font-bold mb-4 text-lg">Backup de Dados</h3>
+                    <p class="text-sm text-gray-600 mb-4">Como o site não tem banco de dados em nuvem, salve seus dados ou importe de outro dispositivo aqui.</p>
+                    <div class="flex gap-4">
+                        <button onclick="exportarDados()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 w-full"><i class="fa-solid fa-download"></i> Baixar Dados</button>
+                        <button onclick="document.getElementById('file-import').click()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"><i class="fa-solid fa-upload"></i> Importar Dados</button>
+                        <input type="file" id="file-import" class="hidden" accept=".json" onchange="importarDados(event)">
+                    </div>
+                    <button onclick="limparTudo()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full"><i class="fa-solid fa-trash"></i> Apagar Tudo</button>
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <div id="config-section" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-xl">
-            <h2 class="text-xl font-bold mb-4">Alterar Senha</h2>
-            <input type="password" id="new-password" placeholder="Nova Senha" class="w-full p-2 border rounded mb-4">
-            <div class="flex justify-end space-x-2">
-                <button onclick="showSection('dashboard')" class="bg-gray-300 px-4 py-2 rounded">Cancelar</button>
-                <button onclick="updatePassword()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- LÓGICA DE DADOS ---
-        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-        let cards = JSON.parse(localStorage.getItem('cards')) || [];
-        let systemPassword = localStorage.getItem('userPass') || "eduardoborghi";
-        let chartInstance = null;
-
-        // --- AUTENTICAÇÃO ---
-        function checkLogin() {
-            const input = document.getElementById('password-input').value;
-            if (input === systemPassword) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                updateUI();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        function updatePassword() {
-            const newPass = document.getElementById('new-password').value;
-            if (newPass) {
-                localStorage.setItem('userPass', newPass);
-                systemPassword = newPass;
-                alert("Senha atualizada com sucesso!");
-                showSection('dashboard');
-            }
-        }
-
-        function logout() { location.reload(); }
-
-        // --- GERENCIAMENTO DE TRANSAÇÕES ---
-        document.getElementById('finance-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const transaction = {
-                desc: document.getElementById('desc').value,
-                val: parseFloat(document.getElementById('val').value),
-                qtd: parseInt(document.getElementById('qtd').value),
-                cat: document.getElementById('cat').value,
-                pag: document.getElementById('pag').value,
-                date: new Date().toLocaleDateString()
-            };
-            transactions.push(transaction);
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-            e.target.reset();
-            updateUI();
-        });
-
-        function addCard() {
-            const bank = document.getElementById('bank-name').value;
-            const expiry = document.getElementById('card-expiry').value;
-            if(bank && expiry) {
-                cards.push({ bank, expiry });
-                localStorage.setItem('cards', JSON.stringify(cards));
-                updateUI();
-            }
-        }
-
-        // --- INTERFACE ---
-        function showSection(section) {
-            if(section === 'config') document.getElementById('config-section').classList.remove('hidden');
-            else document.getElementById('config-section').classList.add('hidden');
-        }
-
-        function updateUI() {
-            // Atualiza Resumos
-            const total = transactions.reduce((acc, curr) => acc + (curr.val * curr.qtd), 0);
-            document.getElementById('total-gasto').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('total-compras').innerText = transactions.length;
-            
-            // Atualiza Cartões
-            const cardList = document.getElementById('card-list');
-            cardList.innerHTML = cards.map(c => `<li>${c.bank} (Vence dia ${c.expiry})</li>`).join('');
-            if(cards.length > 0) document.getElementById('card-destaque').innerText = cards[0].bank;
-
-            renderChart();
-        }
-
-        function renderChart() {
-            const ctx = document.getElementById('categoryChart').getContext('2d');
-            const categories = [...new Set(transactions.map(t => t.cat))];
-            const data = categories.map(cat => {
-                return transactions.filter(t => t.cat === cat).reduce((acc, curr) => acc + (curr.val * curr.qtd), 0);
-            });
-
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: categories,
-                    datasets: [{
-                        label: 'Gastos por Categoria',
-                        data: data,
-                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
-                    }]
-                },
-                options: { responsive: true }
-            });
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
