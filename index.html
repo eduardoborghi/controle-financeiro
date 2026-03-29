@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanças Pro - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-blue-600">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Acesso Restrito</h2>
+            <input type="password" id="password-input" placeholder="Digite a senha" class="w-full p-2 border rounded mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="checkLogin()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Entrar</button>
+            <p id="login-error" class="text-red-500 text-sm mt-2 hidden">Senha incorreta!</p>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <nav class="bg-white shadow-md p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600">Eduardo Finance</h1>
+            <div class="space-x-4">
+                <button onclick="showSection('config')" class="text-gray-600 hover:text-blue-600">Configurações</button>
+                <button onclick="logout()" class="text-red-500">Sair</button>
+            </div>
+        </nav>
+
+        <div class="p-6 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                    <p class="text-gray-500 text-sm">Total Gasto</p>
+                    <h3 id="total-gasto" class="text-2xl font-bold">R$ 0,00</h3>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                    <p class="text-gray-500 text-sm">Compras Realizadas</p>
+                    <h3 id="total-compras" class="text-2xl font-bold">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
+                    <p class="text-gray-500 text-sm">Cartão Principal</p>
+                    <h3 id="card-destaque" class="text-2xl font-bold">Nenhum</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-lg font-bold mb-4">Nova Transação</h2>
+                    <form id="finance-form" class="space-y-4">
+                        <input type="text" id="desc" placeholder="O que você comprou?" class="w-full p-2 border rounded" required>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" id="val" placeholder="Valor (R$)" class="p-2 border rounded" required>
+                            <input type="number" id="qtd" placeholder="Qtd" value="1" class="p-2 border rounded" required>
+                        </div>
+                        <select id="cat" class="w-full p-2 border rounded">
+                            <option value="Alimentação">Alimentação</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Lazer">Lazer</option>
+                            <option value="Saúde">Saúde</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                        <select id="pag" class="w-full p-2 border rounded">
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Pix">Pix</option>
+                            <option id="card-option" value="Cartão">Cartão de Crédito</option>
+                        </select>
+                        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">Adicionar</button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-lg font-bold mb-4">Gastos por Categoria</h2>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                <h2 class="text-lg font-bold mb-4">Meus Cartões & Bancos</h2>
+                <div class="flex gap-4 mb-4">
+                    <input type="text" id="bank-name" placeholder="Banco" class="p-2 border rounded">
+                    <input type="number" id="card-expiry" placeholder="Dia de Vencimento" class="p-2 border rounded w-32">
+                    <button onclick="addCard()" class="bg-blue-500 text-white px-4 py-2 rounded">Salvar Cartão</button>
+                </div>
+                <ul id="card-list" class="list-disc pl-5 text-gray-700"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="config-section" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl">
+            <h2 class="text-xl font-bold mb-4">Alterar Senha</h2>
+            <input type="password" id="new-password" placeholder="Nova Senha" class="w-full p-2 border rounded mb-4">
+            <div class="flex justify-end space-x-2">
+                <button onclick="showSection('dashboard')" class="bg-gray-300 px-4 py-2 rounded">Cancelar</button>
+                <button onclick="updatePassword()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DE DADOS ---
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let cards = JSON.parse(localStorage.getItem('cards')) || [];
+        let systemPassword = localStorage.getItem('userPass') || "eduardoborghi";
+        let chartInstance = null;
+
+        // --- AUTENTICAÇÃO ---
+        function checkLogin() {
+            const input = document.getElementById('password-input').value;
+            if (input === systemPassword) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                updateUI();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        function updatePassword() {
+            const newPass = document.getElementById('new-password').value;
+            if (newPass) {
+                localStorage.setItem('userPass', newPass);
+                systemPassword = newPass;
+                alert("Senha atualizada com sucesso!");
+                showSection('dashboard');
+            }
+        }
+
+        function logout() { location.reload(); }
+
+        // --- GERENCIAMENTO DE TRANSAÇÕES ---
+        document.getElementById('finance-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const transaction = {
+                desc: document.getElementById('desc').value,
+                val: parseFloat(document.getElementById('val').value),
+                qtd: parseInt(document.getElementById('qtd').value),
+                cat: document.getElementById('cat').value,
+                pag: document.getElementById('pag').value,
+                date: new Date().toLocaleDateString()
+            };
+            transactions.push(transaction);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            e.target.reset();
+            updateUI();
+        });
+
+        function addCard() {
+            const bank = document.getElementById('bank-name').value;
+            const expiry = document.getElementById('card-expiry').value;
+            if(bank && expiry) {
+                cards.push({ bank, expiry });
+                localStorage.setItem('cards', JSON.stringify(cards));
+                updateUI();
+            }
+        }
+
+        // --- INTERFACE ---
+        function showSection(section) {
+            if(section === 'config') document.getElementById('config-section').classList.remove('hidden');
+            else document.getElementById('config-section').classList.add('hidden');
+        }
+
+        function updateUI() {
+            // Atualiza Resumos
+            const total = transactions.reduce((acc, curr) => acc + (curr.val * curr.qtd), 0);
+            document.getElementById('total-gasto').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('total-compras').innerText = transactions.length;
+            
+            // Atualiza Cartões
+            const cardList = document.getElementById('card-list');
+            cardList.innerHTML = cards.map(c => `<li>${c.bank} (Vence dia ${c.expiry})</li>`).join('');
+            if(cards.length > 0) document.getElementById('card-destaque').innerText = cards[0].bank;
+
+            renderChart();
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            const categories = [...new Set(transactions.map(t => t.cat))];
+            const data = categories.map(cat => {
+                return transactions.filter(t => t.cat === cat).reduce((acc, curr) => acc + (curr.val * curr.qtd), 0);
+            });
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        label: 'Gastos por Categoria',
+                        data: data,
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+    </script>
+</body>
+</html>
