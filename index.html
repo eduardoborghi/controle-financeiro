@@ -35,7 +35,6 @@
         <div class="bg-white p-8 rounded-lg shadow-xl w-96 text-center">
             <h1 class="text-2xl font-bold mb-6 text-gray-700"><i class="fa-solid fa-wallet text-blue-500"></i> FinançasApp</h1>
             
-            <!-- Adicionado o evento de apertar ENTER para logar -->
             <input type="password" id="password-input" placeholder="Digite sua senha" onkeypress="if(event.key === 'Enter') login()" class="w-full p-3 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
             
             <button onclick="login()" class="w-full bg-blue-500 text-white font-bold py-3 rounded hover:bg-blue-600 transition">Entrar</button>
@@ -199,7 +198,7 @@
     <!-- SCRIPT TUDO-EM-UM -->
     <script>
         // ================= ESTADO DA APLICAÇÃO =================
-        let transacoes = JSON.parse(localStorage.getItem('transacoes')) ||[];
+        let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
         let cartoes = JSON.parse(localStorage.getItem('cartoes')) ||[];
         let senhaApp = localStorage.getItem('senha_app') || 'eduardoborghi';
         let graficoCategorias, graficoPagamentos;
@@ -263,6 +262,7 @@
             document.getElementById('t-data').valueAsDate = new Date();
             alert('Transação adicionada!');
             renderizarTransacoes();
+            atualizarDashboard();
         });
 
         function renderizarTransacoes() {
@@ -270,7 +270,7 @@
             tbody.innerHTML = '';
             
             // Ordenar da mais recente para a mais antiga
-            const transacoesOrdenadas = [...transacoes].sort((a,b) => new Date(b.data) - new Date(a.data));
+            const transacoesOrdenadas =[...transacoes].sort((a,b) => new Date(b.data) - new Date(a.data));
 
             transacoesOrdenadas.forEach(t => {
                 const total = t.valor * t.qtd;
@@ -433,7 +433,7 @@
             reader.onload = function(e) {
                 try {
                     const dados = JSON.parse(e.target.result);
-                    transacoes = dados.transacoes || [];
+                    transacoes = dados.transacoes ||[];
                     cartoes = dados.cartoes ||[];
                     if(dados.senhaApp) {
                         senhaApp = dados.senhaApp;
@@ -451,5 +451,5 @@
 
         function limparTudo() {
             if(confirm('ATENÇÃO: Isso apagará todas as suas transações e cartões. Tem certeza?')) {
-                transacoes =[];
+                transacoes = [];
                 cartoes =
